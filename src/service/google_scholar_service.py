@@ -10,31 +10,28 @@ from src.service.api_service import APIService
 
 
 class GoogleScholarService(APIService):
-    def get_spreadsheet_with_citations(self, file_path: str) -> pd.DataFrame:
+    def get_spreadsheet_with_citations(
+            self,
+            file_path: str,
+            column_name: str
+    ) -> pd.DataFrame:
         df_spreadsheet = self.__load_spreadsheet(file_path)
-        # TODO
-        #   Adicionar busca por coluna de links de pesquisadores
 
-        # sample = df_spreadsheet.head(1)
+        try:
+            df_spreadsheet['Citações'] = df_spreadsheet[f'{column_name};'].apply(self.__get_citations)
+            return df_spreadsheet
 
-        # for column in sample:
-        #     print(column)
-        #     try:
-        #         _user_id = __get_researcher_id(column)
-        #         researcher_column = 'test'
-        #
-        #     except ValueError:
-        #         continue
-        #
-        # else:
-        #     raise Exception("Não houve alterações na planilha")
+        except KeyError as err:
+            print("Houve algum erro ao selecionar a coluna")
+            print(repr(err))
 
-        df_spreadsheet['Citações'] = df_spreadsheet.iloc[0].apply(self.__get_citations)
-        return df_spreadsheet
+        except Exception as err:
+            print("Houve outro tipo de erro ao buscar citações a partir de coluna")
+            print(repr(err))
 
     def __load_spreadsheet(self, file_path: str) -> pd.DataFrame:
         if not exists(file_path):
-            raise Exception("Planilha não existe")
+            raise ValueError("Planilha não existe")
 
         df_spreadsheet = pd.read_excel(file_path)
         df_filtered_spreadsheet = df_spreadsheet.dropna(axis=1)
