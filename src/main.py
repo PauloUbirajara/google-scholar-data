@@ -30,9 +30,10 @@ def render_gui(api: APIService):
         }
     )
     parser.add_argument('Coluna', help="Nome da coluna onde estão os links dos pesquisadores", type=str)
-    args = parser.parse_args()
-    # print(args)
-    # print(argv)
+    _args = parser.parse_args()
+    # TODO Adicionar, no campo de selecionar coluna,
+    #  a opção para puxar todas as colunas do dataframe
+    #  da planilha assim que selecionada
     try:
         planilha, coluna = argv[2:]
         df_planilha = api.get_spreadsheet_with_citations(planilha, coluna)
