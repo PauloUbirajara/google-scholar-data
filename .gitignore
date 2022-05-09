@@ -2,3 +2,5 @@
 src/logs/*
 __pycache__
 *.py[cyo]
+build
+dist
