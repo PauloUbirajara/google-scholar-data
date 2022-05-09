@@ -85,6 +85,11 @@ def render_gui(api: APIService):
         info(result)
         print(result)
 
+        save_spreadsheet(
+            output_folder=output_folder,
+            df_spreadsheet=df_spreadsheet
+        )
+
     except ValueError as err:
         err_message = "Houve algum erro durante a obtenção das citações da planilha!"
         print(err_message)
@@ -93,6 +98,30 @@ def render_gui(api: APIService):
 
     except Exception as err:
         err_message = "Houve algum erro durante a execução do programa!"
+        print(err_message)
+        error(err_message)
+        error(repr(err))
+
+
+def save_spreadsheet(output_folder: str, df_spreadsheet: pd.DataFrame):
+    try:
+        result = f'''
+        Salvando planilha em local específicado pelo usuário:
+        {output_folder}
+        '''
+        print(result)
+        info(result)
+        output_file = f'{output_folder}/citations.xlsx'
+        df_spreadsheet.to_excel(output_file)
+
+    except NotADirectoryError as err:
+        err_message = "Pasta específicada para salvar planilha com citações não existe!"
+        print(err_message)
+        error(err_message)
+        error(repr(err))
+
+    except Exception as err:
+        err_message = "Houve um erro ao salvar planilha com citações."
         print(err_message)
         error(err_message)
         error(repr(err))
