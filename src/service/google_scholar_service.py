@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import pandas as pd
 from requests import get
 
+from src.helper.logging_helper import info, error
 from src.service.api_service import APIService
 
 
@@ -15,26 +16,37 @@ class GoogleScholarService(APIService):
             file_path: str,
             column_name: str
     ) -> pd.DataFrame:
-        df_spreadsheet = self.__load_spreadsheet(file_path)
-
         try:
-            df_spreadsheet['Citações'] = df_spreadsheet[f'{column_name};'].apply(self.__get_citations)
+            info("Tentar carregar a planilha")
+            info(file_path)
+            df_spreadsheet = self.__load_spreadsheet(file_path)
+
+            info("Tentar obter a coluna")
+            info(column_name)
+            df_spreadsheet['Citações'] = df_spreadsheet[f'{column_name}'].apply(self.__get_citations)
+
+            info("Planilha obtida com sucesso")
+            info(df_spreadsheet.to_string())
             return df_spreadsheet
 
         except KeyError as err:
-            print("Houve algum erro ao selecionar a coluna")
-            print(repr(err))
+            err_message = "Houve algum erro ao selecionar a coluna!"
+            error(err_message)
+            error(repr(err))
+            raise TypeError(err_message)
 
         except Exception as err:
-            print("Houve outro tipo de erro ao buscar citações a partir de coluna")
-            print(repr(err))
+            err_message = "Houve outro tipo de erro ao buscar citações a partir de coluna!"
+            error(err_message)
+            error(repr(err))
+            raise TypeError(err_message)
 
     def __load_spreadsheet(self, file_path: str) -> pd.DataFrame:
         if not exists(file_path):
             raise ValueError("Planilha não existe")
 
         df_spreadsheet = pd.read_excel(file_path)
-        df_filtered_spreadsheet = df_spreadsheet.dropna(axis=1)
+        df_filtered_spreadsheet = df_spreadsheet.dropna()
 
         return df_filtered_spreadsheet
 
@@ -70,13 +82,17 @@ class GoogleScholarService(APIService):
             result = loads(page.text)
             return result
 
-        except JSONDecodeError as json_err:
-            print(json_err)
-            raise ValueError('Erro ao transformar conteúdo de página para dicionário')
+        except JSONDecodeError as err:
+            err_message = 'Erro ao transformar conteúdo de página para dicionário'
+            error(err_message)
+            error(repr(err))
+            raise ValueError(err_message)
 
         except Exception as err:
-            print(err)
-            raise ValueError('Erro ao obter dados da API')
+            err_message = 'Erro ao obter dados da API'
+            error(err_message)
+            error(repr(err))
+            raise ValueError(err_message)
 
     def __get_latest_year_citation_from_user_json(self, user_info: dict) -> int:
         _, citations = [*user_info['citations_per_year'].items()][-1]
