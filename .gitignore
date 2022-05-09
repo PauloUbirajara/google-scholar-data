@@ -1,0 +1,4 @@
+*.log
+src/logs/*
+__pycache__
+*.py[cyo]
