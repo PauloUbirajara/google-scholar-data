@@ -53,7 +53,18 @@ def render_gui(api: APIService):
         info(user_args_message)
         print(user_args_message)
 
-        df_planilha = api.get_spreadsheet_with_citations(planilha, coluna)
+        df_spreadsheet, errors = api.get_spreadsheet_with_citations(spreadsheet, column)
+        if not errors:
+            print('Citações obtidas com sucesso!')
+
+        else:
+            warn_message = 'Não foi possível obter citação para todos os pesquisadores.\n'
+            'Links não realizados:\n'''
+            "\n".join(errors)
+
+            print(warn_message)
+            warn(warn_message)
+
         result = f'''
         Citações obtidas com sucesso!
         Planilha final:
