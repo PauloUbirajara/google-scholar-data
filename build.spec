@@ -5,8 +5,8 @@ gooey_root = os.path.dirname(gooey.__file__)
 
 block_cipher = None
 
-a = Analysis(['APPNAME.py'],  # replace me with your path
-             pathex=['/path/to/APP.py'],
+a = Analysis(['./src/main.py'],
+             pathex=['./src'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -25,7 +25,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='main',
+          name='GoogleScholar',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
