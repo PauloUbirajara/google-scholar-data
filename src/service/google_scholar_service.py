@@ -1,13 +1,17 @@
-from json import loads, JSONDecodeError
+from json import loads, JSONDecodeError, dumps
 from os.path import exists
-from re import match
+from re import findall
 from urllib.parse import urlparse
 
 import pandas as pd
 from requests import get
+from time import sleep
 
 from src.helper.logging_helper import info, error
 from src.service.api_service import APIService
+
+
+ENDPOINT_INTERVAL = 15
 
 
 class GoogleScholarService(APIService):
@@ -98,18 +102,29 @@ class GoogleScholarService(APIService):
             raise ValueError('Sem query')
 
         query = result.query
-        pattern = "user=[0-9a-zA-Z]+"
-        has_user_id = match(pattern, query)
+        pattern = "user=[\-A-Za-z0-9]+"
+
+        has_user_id = findall(pattern, query)
 
         if not has_user_id:
+            info("Obter user_id de query")
+            info(f'{query=}')
+            info(f'{pattern=}')
+            info(f'{has_user_id=}')
             raise ValueError('Sem id do usuário')
 
-        user_id = has_user_id.group().split('=')[1]
+        _, user_id = has_user_id[0].split('=')
         return user_id
 
     def __get_citation_for_user_id(self, user_id: str) -> dict:
         endpoint = f'http://cse.bth.se/~fer/googlescholar-api/googlescholar.php?user={user_id}'
+        info("Tentar acessar endpoint")
+        info(endpoint)
+
         page = get(endpoint)
+        info("Requisição feita - Estado da página:")
+        info(str(page.ok))
+        info(page.text)
 
         if not page.ok:
             raise ValueError('Erro ao completar requisição para API')
