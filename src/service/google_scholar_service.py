@@ -1,17 +1,16 @@
 from json import loads, JSONDecodeError, dumps
 from os.path import exists
-from re import findall
+from re import findall, sub
+from time import sleep
 from urllib.parse import urlparse
 
 import pandas as pd
 from requests import get
-from time import sleep
 
 from src.helper.logging_helper import info, error
 from src.service.api_service import APIService
 
-
-ENDPOINT_INTERVAL = 15
+ENDPOINT_INTERVAL = 10
 
 
 class GoogleScholarService(APIService):
@@ -31,7 +30,6 @@ class GoogleScholarService(APIService):
             file_path: str,
             column_name: str
     ) -> (pd.DataFrame, [str]):
-        self.reset_error_count()
         try:
             info("Tentar carregar a planilha")
             info(file_path)
@@ -48,15 +46,18 @@ class GoogleScholarService(APIService):
 
         except KeyError as err:
             err_message = "Houve algum erro ao selecionar a coluna!"
+            print(err_message)
             error(err_message)
             error(repr(err))
-            raise TypeError(err_message)
 
         except Exception as err:
             err_message = "Houve outro tipo de erro ao buscar citações a partir de coluna!"
+            print(err_message)
             error(err_message)
             error(repr(err))
-            raise TypeError(err_message)
+
+        finally:
+            print("\n" * 3)
 
     def __load_spreadsheet(self, file_path: str) -> pd.DataFrame:
         if not exists(file_path):
@@ -68,33 +69,39 @@ class GoogleScholarService(APIService):
         return df_filtered_spreadsheet
 
     def __get_citations(self, researcher_url: str) -> int:
-        try:
-            print("Tentar extrair user_id")
-            info("Tentar extrair user_id")
-            user_id = self.__get_researcher_id(researcher_url)
+        while True:
+            try:
+                print("Iniciar busca para:")
+                print(researcher_url)
 
-            info(f'ID obtido: {user_id}')
-            print(f"Tentar buscar na API")
-            info(f"Tentar buscar na API")
-            user_json = self.__get_citation_for_user_id(user_id)
-            info(dumps(user_json))
+                # print("Tentar extrair user_id")
+                # info("Tentar extrair user_id")
+                user_id = self.__get_researcher_id(researcher_url)
 
-            print("Tentar extrair citações do ano atual do texto")
-            info("Tentar extrair citações do ano atual do texto")
-            citations = self.__get_latest_year_citation_from_user_json(user_json)
+                info(f'ID obtido: {user_id}')
+                # print(f"Tentar buscar na API")
+                info(f"Tentar buscar na API")
+                user_json = self.__get_citation_for_user_id(user_id)
+                info(dumps(user_json))
 
-            print("Citações obtidas, esperar para não sobrecarregar o endpoint")
-            info("Citações obtidas, esperar para não sobrecarregar o endpoint")
-            sleep(ENDPOINT_INTERVAL)
-            return citations
+                # print("Tentar extrair citações do ano atual do texto")
+                info("Tentar extrair citações do ano atual do texto")
+                citations = self.__get_latest_year_citation_from_user_json(user_json)
 
-        except ValueError as err:
-            err_message = f'Houve algum erro ao tentar obter citações para pesquisador:\n{researcher_url}'
-            error(err_message)
-            error(repr(err))
-            self.increase_error_count(researcher_url)
+                print("Citações obtidas")
+                info("Citações obtidas, esperar para não sobrecarregar o endpoint")
+                sleep(ENDPOINT_INTERVAL)
+                return citations
 
-            return -1
+            except ValueError as err:
+                err_message = f'Houve algum erro ao tentar obter citações para pesquisador:\n{researcher_url}'
+                print(err_message)
+                error(err_message)
+                error(repr(err))
+                # self.increase_error_count(researcher_url)
+                # raise ValueError(err)
+            finally:
+                print('\n' * 3)
 
     def __get_researcher_id(self, profile_url: str) -> str:
         result = urlparse(profile_url)
@@ -102,7 +109,7 @@ class GoogleScholarService(APIService):
             raise ValueError('Sem query')
 
         query = result.query
-        pattern = "user=[\-A-Za-z0-9]+"
+        pattern = r"user=[\-A-Za-z0-9]+"
 
         has_user_id = findall(pattern, query)
 
@@ -130,7 +137,9 @@ class GoogleScholarService(APIService):
             raise ValueError('Erro ao completar requisição para API')
 
         try:
-            result = loads(page.text)
+            filter_bad_params_pattern = r'(?<!\\)\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})'
+            filtered_page = sub(filter_bad_params_pattern, '', page.text)
+            result = loads(filtered_page)
             return result
 
         except JSONDecodeError as err:
