@@ -47,7 +47,7 @@ def render_gui(api: APIService):
         widget="FileSaver",
         help="Nome da planilha atualizada com as citações",
         gooey_options={
-            'default_file': 'citations.xlsx',
+            'default_file': 'citations.xls',
             'default_dir': '~/Downloads',
             'wildcard': '|'.join(spreadsheet_filters)
         }
