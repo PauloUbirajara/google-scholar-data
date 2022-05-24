@@ -17,14 +17,18 @@ a = Analysis(['./src/main.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
+
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
+
+options = [('u', None, 'OPTION')]
+
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
           a.zipfiles,
           a.datas,
-          [],
+          options,
           name='GoogleScholar',
           debug=False,
           bootloader_ignore_signals=False,
