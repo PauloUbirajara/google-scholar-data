@@ -31,13 +31,16 @@ class GoogleScholarService(APIService):
             column_name: str
     ) -> (pd.DataFrame, [str]):
         try:
+            info("Reiniciar contagem de erros")
+            self.reset_error_count()
+
             info("Tentar carregar a planilha")
             info(file_path)
             df_spreadsheet = self.__load_spreadsheet(file_path)
 
             info("Tentar obter a coluna")
             info(column_name)
-            df_spreadsheet['Citações'] = df_spreadsheet[f'{column_name}'].apply(self.__get_citations)
+            df_spreadsheet['Citações'] = df_spreadsheet[column_name].apply(self.__get_citations)
 
             info("Planilha obtida com sucesso")
             info(df_spreadsheet.to_string())
@@ -46,18 +49,20 @@ class GoogleScholarService(APIService):
 
         except KeyError as err:
             err_message = "Houve algum erro ao selecionar a coluna!"
-            print(err_message)
+            print(err_message, flush=True)
             error(err_message)
             error(repr(err))
 
         except Exception as err:
             err_message = "Houve outro tipo de erro ao buscar citações a partir de coluna!"
-            print(err_message)
+            print(err_message, flush=True)
             error(err_message)
             error(repr(err))
 
         finally:
-            print("\n" * 3)
+            print("\n" * 3, flush=True)
+
+        return None, self.current_errors()
 
     def __load_spreadsheet(self, file_path: str) -> pd.DataFrame:
         if not exists(file_path):
@@ -71,37 +76,34 @@ class GoogleScholarService(APIService):
     def __get_citations(self, researcher_url: str) -> int:
         while True:
             try:
-                print("Iniciar busca para:")
-                print(researcher_url)
+                print("Iniciar busca para:", flush=True)
+                print(researcher_url, flush=True)
 
-                # print("Tentar extrair user_id")
-                # info("Tentar extrair user_id")
+                info("Tentar extrair user_id")
                 user_id = self.__get_researcher_id(researcher_url)
 
                 info(f'ID obtido: {user_id}')
-                # print(f"Tentar buscar na API")
-                info(f"Tentar buscar na API")
+                info("Tentar buscar na API")
                 user_json = self.__get_citation_for_user_id(user_id)
+                info("Dados obtidos da API")
                 info(dumps(user_json))
 
-                # print("Tentar extrair citações do ano atual do texto")
                 info("Tentar extrair citações do ano atual do texto")
                 citations = self.__get_latest_year_citation_from_user_json(user_json)
 
-                print("Citações obtidas")
+                print("Citações obtidas com sucesso!", flush=True)
                 info("Citações obtidas, esperar para não sobrecarregar o endpoint")
                 sleep(ENDPOINT_INTERVAL)
                 return citations
 
             except ValueError as err:
                 err_message = f'Houve algum erro ao tentar obter citações para pesquisador:\n{researcher_url}'
-                print(err_message)
+                print(err_message, flush=True)
                 error(err_message)
                 error(repr(err))
-                # self.increase_error_count(researcher_url)
-                # raise ValueError(err)
+
             finally:
-                print('\n' * 3)
+                print('\n', flush=True)
 
     def __get_researcher_id(self, profile_url: str) -> str:
         result = urlparse(profile_url)
