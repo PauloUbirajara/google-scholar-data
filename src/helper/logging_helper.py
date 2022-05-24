@@ -1,15 +1,13 @@
 from src.singleton.log_singleton import LogSingleton
 
-__log = LogSingleton.get()
-
 
 def info(message: str):
-    __log.info(message)
+    LogSingleton.get().info(message)
 
 
 def warn(message: str):
-    __log.warn(message)
+    LogSingleton.get().warn(message)
 
 
 def error(message: str):
-    __log.error(message)
+    LogSingleton.get().error(message)

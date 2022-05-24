@@ -5,7 +5,6 @@ import pandas as pd
 import sys
 from gooey import Gooey, GooeyParser
 from os.path import join
-from os import fdopen
 
 from helper.date_helper import timestamp_as_string
 from helper.logging_helper import info, warn, error
