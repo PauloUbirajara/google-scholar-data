@@ -4,50 +4,47 @@ from src.types.scholar_info import ScholarInfo
 
 
 class ScholarlyService:
-	def fetch_info(id: str) -> ScholarInfo:
-		result = scholarly.search_author_id(id)
-		full_author_info = scholarly.fill(result)
+    @staticmethod
+    def fetch_info(id: str) -> ScholarInfo:
+        result = scholarly.search_author_id(id)
+        author_info = scholarly.fill(result)
 
-	"citedby": 428,
-  "organization": 6518679690484165796,
-  "homepage": "http://steven.cholewiak.com/",
-  "citedby5y": 292,
-  "hindex": 10,
-  "hindex5y": 10,
-  "i10index": 10,
-  "i10index5y": 10,
-  "
+        current_year_citations = get_current_year_citations(author_info)
+        h10_index = calculate_h10_index(author_info)
+        h_index = get_hindex(author_info)
+        previous_5year_citations = get_5year_citations(author_info)
+
+        info = ScholarInfo(
+            current_year_citations=current_year_citations,
+            h10_index=h10_index,
+            h_index=h_index,
+            previous_5year_citations=previous_5year_citations
+        )
+        return info
 
 
-		info = ScholarInfo(
-			current_year_citations=full_author_info.get('citedby'),
-			h10_index=full_author_info.get(''),
-		)
-		return info
-		
+def get_current_year_citations(author) -> int:
+    return author.get('citedby', 0)
 
-# from scholarly import scholarly
 
-# # Retrieve the author's data, fill-in, and print
-# # Get an iterator for the author results
-# search_query = scholarly.search_author('Steven A Cholewiak')
-# # Retrieve the first result from the iterator
-# first_author_result = next(search_query)
-# scholarly.pprint(first_author_result)
+def calculate_h10_index(author) -> int:
+    publications = author.get('publications', [])
+    paper_citations = [
+        paper.get('num_citations', 0)
+        for paper in publications
+    ]
+    papers_with_10_or_more_citations = [
+        citation
+        for citation in paper_citations
+        if citation > 10
+    ]
+    h10_index = sum(papers_with_10_or_more_citations)
+    return h10_index
 
-# # Retrieve all the details for the author
-# author = scholarly.fill(first_author_result )
-# scholarly.pprint(author)
 
-# # Take a closer look at the first publication
-# first_publication = author['publications'][0]
-# first_publication_filled = scholarly.fill(first_publication)
-# scholarly.pprint(first_publication_filled)
+def get_hindex(author) -> int:
+    return author.get('hindex', 0)
 
-# # Print the titles of the author's publications
-# publication_titles = [pub['bib']['title'] for pub in author['publications']]
-# print(publication_titles)
 
-# # Which papers cited that publication?
-# citations = [citation['bib']['title'] for citation in scholarly.citedby(first_publication_filled)]
-# print(citations)
+def get_5year_citations(author) -> int:
+    return author.get('citedby5y', 0)
