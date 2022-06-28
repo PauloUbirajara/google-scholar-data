@@ -1,12 +1,26 @@
-from scholarly import scholarly
+from scholarly import scholarly, ProxyGenerator
 
-from src.types.scholar_info import ScholarInfo
+from src.model.scholar_info import ScholarInfo
 
 
 class ScholarlyService:
+    has_set_proxies = False
+
     @staticmethod
-    def fetch_info(id: str) -> ScholarInfo:
-        result = scholarly.search_author_id(id)
+    def setup_proxies():
+        ScholarlyService.has_set_proxies = True
+
+        # Usar proxies para evitar rastreamento pelo Google Scholar
+        pg = ProxyGenerator()
+        pg.FreeProxies()
+        scholarly.use_proxy(pg)
+
+    @staticmethod
+    def fetch_info(researcher_id: str) -> ScholarInfo:
+        if not ScholarlyService.has_set_proxies:
+            ScholarlyService.setup_proxies()
+
+        result = scholarly.search_author_id(researcher_id)
         author_info = scholarly.fill(result)
 
         current_year_citations = get_current_year_citations(author_info)
@@ -20,6 +34,7 @@ class ScholarlyService:
             h_index=h_index,
             previous_5year_citations=previous_5year_citations
         )
+
         return info
 
 
