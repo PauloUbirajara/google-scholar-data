@@ -4,3 +4,4 @@ requests
 gooey
 wxpython
 scholarly
+openpyxl
