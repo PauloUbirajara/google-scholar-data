@@ -1,0 +1,7 @@
+xlrd
+pandas
+requests
+gooey
+wxpython
+scholarly
+openpyxl
