@@ -10,13 +10,14 @@ from gooey import Gooey, GooeyParser
 from src.exception.exceptions import InvalidInputException, InvalidResearcherURLException, FetchException
 from src.helper.date_helper import timestamp_as_string
 from src.helper.logging_helper import info, error
+from src.model.scholar_info import ScholarInfo
 from src.service.scholarly_service import ScholarlyService
 from src.strings.gooey_strings import program_name, description, language
 
 
 @Gooey(
     program_name=program_name,
-    description=description,
+    program_description=description,
     language=language
 )
 def render():
@@ -160,35 +161,44 @@ def save_researcher_data_to_new_spreadsheet(researcher_data: dict):
 
 def fetch_researcher_from_row(link: str):
     try:
-        researcher_id = get_researcher_id(link)
-        researcher = ScholarlyService.fetch_info(researcher_id)
+        researcher = fetch_link_from_service(link)
+        info('Pesquisador OK')
+        info(researcher)
 
-        if researcher is None:
-            raise FetchException("Erro durante busca de informações na API")
+        INTERVAL_BETWEEN_REQUESTS = 10
+        sleep(INTERVAL_BETWEEN_REQUESTS)
 
-    except InvalidResearcherURLException:
-        raise FetchException("URL fornecida inválida")
-
-    except scholarly.MaxTriesExceededException:
-        raise FetchException("Erro ao buscar informações na API")
+        return [
+            researcher.current_year_citations,
+            researcher.previous_5year_citations,
+            researcher.h_index,
+            researcher.h10_index
+        ]
 
     except FetchException as err:
         error('Erro ao buscar link de pesquisador na API')
         error(repr(err))
         return [pd.NA] * 4
 
-    info(f'Pesquisador "{researcher_id}" OK')
-    print(f'Pesquisador "{researcher_id}" OK')
 
-    INTERVAL_BETWEEN_REQUESTS = 25
-    sleep(INTERVAL_BETWEEN_REQUESTS)
+def fetch_link_from_service(link: str) -> ScholarInfo:
+    try:
+        if pd.isna(link):
+            raise FetchException("Link nulo")
 
-    return [
-        researcher.current_year_citations,
-        researcher.previous_5year_citations,
-        researcher.h_index,
-        researcher.h10_index
-    ]
+        researcher_id = get_researcher_id(link)
+        researcher = ScholarlyService.fetch_info(researcher_id)
+
+        if researcher is None:
+            raise FetchException("Erro durante busca de informações na API")
+
+        return researcher
+
+    except InvalidResearcherURLException:
+        raise FetchException("URL fornecida inválida")
+
+    except scholarly.MaxTriesExceededException:
+        raise FetchException("Erro ao buscar informações na API")
 
 
 def expected_columns_from_service():
@@ -203,11 +213,11 @@ def expected_columns_from_service():
 def get_researcher_id(link: str) -> str:
     result = urlparse(link)
 
-    if pd.isnull(link) or not result.query:
+    if not result.query:
         raise InvalidResearcherURLException(link)
 
     query = result.query
-    pattern = r"user=[\-A-Za-z0-9]+"
+    pattern = r"user=[\-\_A-Za-z0-9]+"
 
     has_user_id = findall(pattern, query)
 
