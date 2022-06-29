@@ -9,9 +9,9 @@ class LogSingleton:
     @staticmethod
     def get():
         if not hasattr(LogSingleton, '__logger'):
-            LogSingleton.__logger = new_logger()
+            setattr(LogSingleton, '__logger', new_logger())
 
-        return LogSingleton.__logger
+        return getattr(LogSingleton, '__logger')
 
 
 def new_logger():
