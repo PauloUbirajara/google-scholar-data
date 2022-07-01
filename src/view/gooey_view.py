@@ -165,7 +165,7 @@ def fetch_researcher_from_row(link: str):
         info('Pesquisador OK')
         info(researcher)
 
-        INTERVAL_BETWEEN_REQUESTS = 10
+        INTERVAL_BETWEEN_REQUESTS = 15
         sleep(INTERVAL_BETWEEN_REQUESTS)
 
         return [
