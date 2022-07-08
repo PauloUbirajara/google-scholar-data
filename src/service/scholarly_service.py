@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from scholarly import scholarly, ProxyGenerator
 
 from src.model.scholar_info import ScholarInfo
@@ -39,7 +41,15 @@ class ScholarlyService:
 
 
 def get_current_year_citations(author) -> int:
-    return author.get('citedby', 0)
+    citations_per_year: dict = author.get('cites_per_year')
+    CITATIONS_ON_ERROR = -1
+
+    if citations_per_year is None:
+        return CITATIONS_ON_ERROR
+
+    current_year = datetime.now().year
+    current_year_citation = citations_per_year.get(current_year, CITATIONS_ON_ERROR)
+    return current_year_citation
 
 
 def calculate_h10_index(author) -> int:
