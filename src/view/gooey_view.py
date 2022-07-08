@@ -160,6 +160,11 @@ def save_researcher_data_to_new_spreadsheet(researcher_data: dict):
 
 
 def fetch_researcher_from_row(link: str):
+    researcher_data = [pd.NA] * 4
+
+    if pd.isna(link):
+        return researcher_data
+
     try:
         researcher = fetch_link_from_service(link)
         info('Pesquisador OK')
@@ -168,7 +173,7 @@ def fetch_researcher_from_row(link: str):
         INTERVAL_BETWEEN_REQUESTS = 15
         sleep(INTERVAL_BETWEEN_REQUESTS)
 
-        return [
+        researcher_data = [
             researcher.current_year_citations,
             researcher.previous_5year_citations,
             researcher.h_index,
@@ -176,9 +181,11 @@ def fetch_researcher_from_row(link: str):
         ]
 
     except FetchException as err:
+        print('Erro ao buscar pesquisador:', link)
         error('Erro ao buscar link de pesquisador na API')
         error(repr(err))
-        return [pd.NA] * 4
+
+    return researcher_data
 
 
 def fetch_link_from_service(link: str) -> ScholarInfo:
