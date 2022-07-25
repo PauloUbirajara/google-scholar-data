@@ -1,6 +1,5 @@
 from os.path import exists
 from re import findall
-from time import sleep
 from urllib.parse import urlparse
 
 import pandas as pd
@@ -8,11 +7,14 @@ import scholarly
 from gooey import Gooey, GooeyParser
 
 from src.exception.exceptions import InvalidInputException, InvalidResearcherURLException, FetchException
-from src.helper.date_helper import timestamp_as_string
+from src.helper.date_helper import timestamp_as_string, current_year
 from src.helper.logging_helper import info, error
 from src.model.scholar_info import ScholarInfo
-from src.service.scholarly_service import ScholarlyService
+from src.service.scholarly_service import ScholarlyService, VALUE_IF_NOT_FOUND
 from src.strings.gooey_strings import program_name, description, language
+
+CURRENT_RESEARCHER_INDEX = 0
+SPREADSHEET_RESEARCHER_COUNT = 1
 
 
 @Gooey(
@@ -129,10 +131,17 @@ def fetch_data_from_fields(fields: dict) -> dict:
     for page in spreadsheet.sheet_names:
         info(f'Iniciar busca na página "{page}"')
         print(f'Iniciar busca na página "{page}"')
+
         df_spreadsheet = pd.read_excel(
             io=spreadsheet_file,
             sheet_name=page
         )
+
+        global CURRENT_RESEARCHER_INDEX
+        global SPREADSHEET_RESEARCHER_COUNT
+
+        CURRENT_RESEARCHER_INDEX = 1
+        SPREADSHEET_RESEARCHER_COUNT = df_spreadsheet.shape[0]
 
         # Adicionar colunas com novos resultados
         df_spreadsheet[expected_columns_from_service()] = df_spreadsheet.apply(
@@ -160,25 +169,47 @@ def save_researcher_data_to_new_spreadsheet(researcher_data: dict):
 
 
 def fetch_researcher_from_row(link: str):
+    researcher_data = [pd.NA] * 4
+
+    if pd.isna(link):
+        return researcher_data
+
+    show_current_progress()
+    increase_current_progress()
+
     try:
-        researcher = fetch_link_from_service(link)
-        info('Pesquisador OK')
-        info(researcher)
+        RETRIES_BEFORE_SKIPPING = 3
+        current_try = 1
+        while current_try <= RETRIES_BEFORE_SKIPPING:
+            print(f'Tentativa {current_try}/{RETRIES_BEFORE_SKIPPING}')
+            print("Buscando pesquisador:", link)
 
-        INTERVAL_BETWEEN_REQUESTS = 15
-        sleep(INTERVAL_BETWEEN_REQUESTS)
+            researcher = fetch_link_from_service(link)
 
-        return [
-            researcher.current_year_citations,
-            researcher.previous_5year_citations,
-            researcher.h_index,
-            researcher.h10_index
-        ]
+            if researcher.current_year_citations == VALUE_IF_NOT_FOUND:
+                current_try += 1
+                continue
+
+            print('Pesquisador OK')
+            info('Pesquisador OK')
+            info(researcher)
+
+            researcher_data = [
+                researcher.h_index,
+                researcher.h10_index,
+                researcher.current_year_citations,
+                researcher.previous_5year_citations,
+            ]
+            break
 
     except FetchException as err:
+        print('Erro ao buscar pesquisador:', link)
         error('Erro ao buscar link de pesquisador na API')
         error(repr(err))
-        return [pd.NA] * 4
+
+    print()
+
+    return researcher_data
 
 
 def fetch_link_from_service(link: str) -> ScholarInfo:
@@ -203,10 +234,10 @@ def fetch_link_from_service(link: str) -> ScholarInfo:
 
 def expected_columns_from_service():
     return [
-        'Citações',
-        'Citações - 5 anos',
         'H Index',
-        'H10 Index'
+        'H10 Index',
+        f'Citações - {current_year()}',
+        'Citações - 5 anos',
     ]
 
 
@@ -226,3 +257,19 @@ def get_researcher_id(link: str) -> str:
 
     _, user_id = has_user_id[0].split('=')
     return user_id
+
+
+def show_current_progress():
+    global CURRENT_RESEARCHER_INDEX
+    global SPREADSHEET_RESEARCHER_COUNT
+
+    current_count = CURRENT_RESEARCHER_INDEX
+    total_count = SPREADSHEET_RESEARCHER_COUNT
+
+    progress_percentage = float(current_count) / float(total_count) * 100.0
+    print(f'Pesquisador {current_count}/{total_count} ({progress_percentage:.2f}%)')
+
+
+def increase_current_progress():
+    global CURRENT_RESEARCHER_INDEX
+    CURRENT_RESEARCHER_INDEX += 1
