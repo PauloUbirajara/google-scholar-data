@@ -141,7 +141,7 @@ def fetch_data_from_fields(fields: dict) -> dict:
         global SPREADSHEET_RESEARCHER_COUNT
 
         CURRENT_RESEARCHER_INDEX = 1
-        SPREADSHEET_RESEARCHER_COUNT = df_spreadsheet.size
+        SPREADSHEET_RESEARCHER_COUNT = df_spreadsheet.shape[0]
 
         # Adicionar colunas com novos resultados
         df_spreadsheet[expected_columns_from_service()] = df_spreadsheet.apply(
@@ -192,7 +192,7 @@ def fetch_researcher_from_row(link: str):
 
             print('Pesquisador OK')
             info('Pesquisador OK')
-            info(repr(researcher))
+            info(researcher)
 
             researcher_data = [
                 researcher.h_index,
@@ -260,11 +260,14 @@ def get_researcher_id(link: str) -> str:
 
 
 def show_current_progress():
+    global CURRENT_RESEARCHER_INDEX
+    global SPREADSHEET_RESEARCHER_COUNT
+
     current_count = CURRENT_RESEARCHER_INDEX
     total_count = SPREADSHEET_RESEARCHER_COUNT
 
     progress_percentage = float(current_count) / float(total_count) * 100.0
-    print(f'Pesquisador {current_count}/{total_count} ({progress_percentage:.2f})')
+    print(f'Pesquisador {current_count}/{total_count} ({progress_percentage:.2f}%)')
 
 
 def increase_current_progress():
