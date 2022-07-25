@@ -7,7 +7,7 @@ import scholarly
 from gooey import Gooey, GooeyParser
 
 from src.exception.exceptions import InvalidInputException, InvalidResearcherURLException, FetchException
-from src.helper.date_helper import timestamp_as_string
+from src.helper.date_helper import timestamp_as_string, current_year
 from src.helper.logging_helper import info, error
 from src.model.scholar_info import ScholarInfo
 from src.service.scholarly_service import ScholarlyService, VALUE_IF_NOT_FOUND
@@ -236,7 +236,7 @@ def expected_columns_from_service():
     return [
         'H Index',
         'H10 Index',
-        'Citações',
+        f'Citações - {current_year()}',
         'Citações - 5 anos',
     ]
 

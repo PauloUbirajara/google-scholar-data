@@ -1,7 +1,6 @@
-from datetime import datetime
-
 from scholarly import scholarly, ProxyGenerator
 
+from src.helper.date_helper import current_year
 from src.model.scholar_info import ScholarInfo
 
 VALUE_IF_NOT_FOUND = 0
@@ -58,8 +57,7 @@ def get_current_year_citations(author) -> int:
     if citations_per_year is None:
         return VALUE_IF_NOT_FOUND
 
-    current_year = datetime.now().year
-    current_year_citation = citations_per_year.get(current_year, VALUE_IF_NOT_FOUND)
+    current_year_citation = citations_per_year.get(current_year(), VALUE_IF_NOT_FOUND)
     return current_year_citation
 
 
