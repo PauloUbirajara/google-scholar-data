@@ -1,7 +1,7 @@
-xlrd
+gooey
+openpyxl
 pandas
 requests
 gooey
 wxpython
-scholarly
-openpyxl
+xlrd

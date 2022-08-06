@@ -3,14 +3,13 @@ from re import findall
 from urllib.parse import urlparse
 
 import pandas as pd
-import scholarly
 from gooey import Gooey, GooeyParser
 
 from src.exception.exceptions import InvalidInputException, InvalidResearcherURLException, FetchException
 from src.helper.date_helper import timestamp_as_string, current_year
 from src.helper.logging_helper import info, error
 from src.model.scholar_info import ScholarInfo
-from src.service.scholarly_service import ScholarlyService, VALUE_IF_NOT_FOUND
+from src.service.selenium_service import SeleniumService, VALUE_IF_NOT_FOUND
 from src.strings.gooey_strings import program_name, description, language
 
 CURRENT_RESEARCHER_INDEX = 0
@@ -227,9 +226,6 @@ def fetch_link_from_service(link: str) -> ScholarInfo:
 
     except InvalidResearcherURLException:
         raise FetchException("URL fornecida inválida")
-
-    except scholarly.MaxTriesExceededException:
-        raise FetchException("Erro ao buscar informações na API")
 
 
 def expected_columns_from_service():
