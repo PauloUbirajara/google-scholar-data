@@ -2,6 +2,6 @@ gooey
 openpyxl
 pandas
 requests
-gooey
+selenium
 wxpython
 xlrd

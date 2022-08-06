@@ -14,6 +14,7 @@ from src.strings.gooey_strings import program_name, description, language
 
 CURRENT_RESEARCHER_INDEX = 0
 SPREADSHEET_RESEARCHER_COUNT = 1
+SCHOLAR_SERVICE = SeleniumService
 
 
 @Gooey(
@@ -217,7 +218,7 @@ def fetch_link_from_service(link: str) -> ScholarInfo:
             raise FetchException("Link nulo")
 
         researcher_id = get_researcher_id(link)
-        researcher = ScholarlyService.fetch_info(researcher_id)
+        researcher = SCHOLAR_SERVICE.fetch_info(researcher_id)
 
         if researcher is None:
             raise FetchException("Erro durante busca de informações na API")
