@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 
 from src.exception.exceptions import FetchException
-from src.helper.logging_helper import error
+from src.helper.logging_helper import error, warn
 from src.model.scholar_info import ScholarInfo
 
 VALUE_IF_NOT_FOUND = 0
@@ -39,28 +39,41 @@ def open_researcher_profile(driver: Firefox, researcher_id: str):
     )
 
     citations_years = [
-        html_element.text
+        html_element.get_attribute('textContent')
         for html_element in citations_elements.find_elements(By.CLASS_NAME, "gsc_g_t")
     ]
 
-    citations_values = [
-        int(html_element.get_attribute('textContent'))
-        for html_element in citations_elements.find_elements(By.TAG_NAME, "a")
-    ]
+    citations_values = [0] * len(citations_years)
+
+    for html_element in citations_elements.find_elements(By.TAG_NAME, "a"):
+        current_zindex = html_element.value_of_css_property('z-index')
+        if current_zindex == 'auto':
+            continue
+
+        citation_index = len(citations_years) - int(current_zindex)
+        citations_values[citation_index] = int(html_element.get_attribute('textContent'))
+
+    warn(f'id: {info.id}')
+    warn(f'citation_years: {citations_years}')
+    warn(f'citation_values: {citations_values}')
 
     citations_dict = dict(zip(citations_years, citations_values))
-    citations_dict.pop('')
     info.set_citations_dict(citations_dict)
 
     return info
 
 
+def new_options_for_firefox_driver():
+    options = Options()
+    options.headless = True
+    return options
+
+
 class SeleniumService:
     @staticmethod
     def fetch_info(researcher_id: str) -> ScholarInfo:
-        options = Options()
-        options.headless = True
-        driver = Firefox(options=options)
+
+        driver = Firefox(options=new_options_for_firefox_driver())
 
         info = None
 
