@@ -6,7 +6,7 @@ import pandas as pd
 from gooey import Gooey, GooeyParser
 
 from src.exception.exceptions import InvalidInputException, InvalidResearcherURLException, FetchException
-from src.helper.date_helper import timestamp_as_string, current_year
+from src.helper.date_helper import timestamp_as_string
 from src.helper.logging_helper import info, error
 from src.model.scholar_info import ScholarInfo
 from src.service.selenium_service import SeleniumService, VALUE_IF_NOT_FOUND
@@ -169,7 +169,7 @@ def save_researcher_data_to_new_spreadsheet(researcher_data: dict):
 
 
 def fetch_researcher_from_row(link: str):
-    researcher_data = [pd.NA] * 4
+    researcher_data = [pd.NA] * len(expected_columns_from_service())
 
     if pd.isna(link):
         return researcher_data
@@ -178,29 +178,24 @@ def fetch_researcher_from_row(link: str):
     increase_current_progress()
 
     try:
-        RETRIES_BEFORE_SKIPPING = 3
-        current_try = 1
-        while current_try <= RETRIES_BEFORE_SKIPPING:
-            print(f'Tentativa {current_try}/{RETRIES_BEFORE_SKIPPING}')
-            print("Buscando pesquisador:", link)
+        print("Buscando pesquisador:", link)
 
-            researcher = fetch_link_from_service(link)
+        researcher = fetch_link_from_service(link)
 
-            if researcher.current_year_citations == VALUE_IF_NOT_FOUND:
-                current_try += 1
-                continue
+        print('Pesquisador OK')
+        info('Pesquisador OK')
+        info(researcher.__str__())
 
-            print('Pesquisador OK')
-            info('Pesquisador OK')
-            info(researcher)
-
-            researcher_data = [
-                researcher.h_index,
-                researcher.h10_index,
-                researcher.current_year_citations,
-                researcher.previous_5year_citations,
+        researcher_data = [
+            researcher.h_index,
+            researcher.h10_index,
+            *[
+                researcher.citations_dict.get(year, VALUE_IF_NOT_FOUND)
+                for year in expected_years()
             ]
-            break
+        ]
+
+        info(str(researcher_data))
 
     except FetchException as err:
         print('Erro ao buscar pesquisador:', link)
@@ -229,12 +224,33 @@ def fetch_link_from_service(link: str) -> ScholarInfo:
         raise FetchException("URL fornecida inválida")
 
 
+def expected_years():
+    return [
+        '2015',
+        '2016',
+        '2016',
+        '2017',
+        '2018',
+        '2019',
+        '2020',
+        '2021',
+        '2022'
+    ]
+
+
 def expected_columns_from_service():
     return [
         'H Index',
         'H10 Index',
-        f'Citações - {current_year()}',
-        'Citações - 5 anos',
+        'Citações - 2015',
+        'Citações - 2016',
+        'Citações - 2016',
+        'Citações - 2017',
+        'Citações - 2018',
+        'Citações - 2019',
+        'Citações - 2020',
+        'Citações - 2021',
+        'Citações - 2022'
     ]
 
 
