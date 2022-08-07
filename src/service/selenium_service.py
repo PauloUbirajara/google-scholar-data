@@ -1,11 +1,12 @@
 from time import sleep
 
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver import Firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
-from selenium.common.exceptions import WebDriverException
 
 from src.exception.exceptions import FetchException
+from src.helper.logging_helper import error
 from src.model.scholar_info import ScholarInfo
 
 VALUE_IF_NOT_FOUND = 0
@@ -48,6 +49,7 @@ def open_researcher_profile(driver: Firefox, researcher_id: str):
     ]
 
     citations_dict = dict(zip(citations_years, citations_values))
+    citations_dict.pop('')
     info.set_citations_dict(citations_dict)
 
     return info
@@ -60,18 +62,23 @@ class SeleniumService:
         options.headless = True
         driver = Firefox(options=options)
 
+        info = None
+
         try:
             info = open_researcher_profile(driver, researcher_id)
+            INTERVAL_BETWEEN_QUERIES = 25
+            sleep(INTERVAL_BETWEEN_QUERIES)
 
         except WebDriverException:
-            raise FetchException("Erro ao buscar dados de pesquisador - Selenium")
+            error("Erro ao obter dados de pesquisador - Selenium")
 
-        except Exception:
-            raise FetchException("Erro ao buscar dados de pesquisador")
+        except Exception as e:
+            error("Erro ao obter dados de pesquisador")
+            error(repr(e))
 
         driver.close()
 
-        INTERVAL_BETWEEN_QUERIES = 25
-        sleep(INTERVAL_BETWEEN_QUERIES)
+        if info is None:
+            raise FetchException("Erro ao buscar dados de pesquisador - Selenium")
 
         return info
