@@ -14,7 +14,7 @@ class ScholarInfo:
         self.citations_dict = {}
 
     def __str__(self):
-        return '\n'.join([f'id: {self.id}', f'h_index: {self.h_index}', f'i10_index: {self.h10_index}',
+        return '\n'.join(['', f'id: {self.id}', f'h_index: {self.h_index}', f'i10_index: {self.h10_index}',
                           f'citation_dict: {self.citations_dict}'])
 
     def set_h_index(self, new_h_index: int):
