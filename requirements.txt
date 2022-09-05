@@ -1,7 +1,8 @@
+auto-py-to-exe==2.10.1
 gooey
 openpyxl
 pandas
-requests
+pyinstaller==4.10.0
 selenium
 wxpython
 xlrd
