@@ -30,10 +30,7 @@ def render():
     validate_fields(fields)
 
     info("Iterar pela planilha")
-    researcher_data = fetch_data_from_fields(fields)
-
-    info("Salvar na planilha nova")
-    save_researcher_data_to_new_spreadsheet(researcher_data)
+    fetch_data_from_fields(fields)
 
 
 def setup_gooey_fields() -> GooeyParser:
@@ -113,6 +110,8 @@ def fetch_data_from_fields(fields: dict) -> dict:
     researcher_data = {}
     info(f'Iniciar busca em planilha "{spreadsheet_file}"')
 
+    output_file = f'citations_{timestamp_as_string()}.xlsx'
+
     for page in spreadsheet.sheet_names:
         info(f'Iniciar busca na página "{page}"')
 
@@ -134,11 +133,11 @@ def fetch_data_from_fields(fields: dict) -> dict:
         warn(df_spreadsheet.to_string())
         researcher_data[page] = df_spreadsheet
 
-    return researcher_data
+        info("Salvar na planilha nova")
+        save_researcher_data_to_new_spreadsheet(output_file, researcher_data)
 
 
-def save_researcher_data_to_new_spreadsheet(researcher_data: dict):
-    output_file = f'citations_{timestamp_as_string()}.xlsx'
+def save_researcher_data_to_new_spreadsheet(output_file: str, researcher_data: dict):
     info(f'Salvar dados em planilha "{output_file}"')
 
     with pd.ExcelWriter(path=output_file, engine='openpyxl') as writer:
