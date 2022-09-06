@@ -2,7 +2,12 @@
 src/logs/*
 __pycache__
 *.py[cyo]
-build
-dist
 .idea
-citations_*.xlsx
+
+# Citações geradas
+**/citations_*.xlsx
+
+# Compilações pelo PyInstaller
+**/build
+**/dist
+**/output
