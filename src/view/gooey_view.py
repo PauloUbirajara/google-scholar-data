@@ -102,7 +102,7 @@ def validate_column(spreadsheet: str, column: str):
         )
 
 
-def fetch_data_from_fields(fields: dict) -> dict:
+def fetch_data_from_fields(fields: dict):
     spreadsheet_file = fields.get('spreadsheet')
     spreadsheet = pd.ExcelFile(spreadsheet_file)
     column = fields.get('column')
