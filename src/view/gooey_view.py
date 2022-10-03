@@ -127,7 +127,9 @@ def fetch_data_from_fields(fields: dict):
 
         # Adicionar colunas com novos resultados
         df_spreadsheet[expected_columns_from_service()] = df_spreadsheet.apply(
-            func=lambda researcher: fetch_researcher_from_row(researcher[column]), axis=1, result_type='expand'
+            func=lambda researcher: fetch_researcher_from_row(researcher[column]),
+            axis=1,
+            result_type='expand'
         )
         warn("Dados coletados:")
         warn(df_spreadsheet.to_string())
@@ -147,10 +149,11 @@ def save_researcher_data_to_new_spreadsheet(output_file: str, researcher_data: d
 
 
 def fetch_researcher_from_row(link: str):
-    researcher_data = [0] * len(expected_columns_from_service())
-
     if pd.isna(link):
-        return researcher_data
+        invalid_researcher_data = [pd.NA] * len(expected_columns_from_service())
+        return invalid_researcher_data
+
+    researcher_data = [0] * len(expected_columns_from_service())
 
     show_current_progress()
     increase_current_progress()
@@ -163,8 +166,14 @@ def fetch_researcher_from_row(link: str):
         info('Pesquisador OK')
         warn(researcher.__str__())
 
-        researcher_data = [researcher.h_index, researcher.h10_index,
-                           *[researcher.citations_dict.get(year, VALUE_IF_NOT_FOUND) for year in expected_years()]]
+        researcher_data = [
+            researcher.h_index,
+            researcher.h10_index,
+            *[
+                researcher.citations_dict.get(year, VALUE_IF_NOT_FOUND)
+                for year in expected_years()
+            ]
+        ]
 
         warn(str(researcher_data))
 
