@@ -5,7 +5,8 @@ __pycache__
 .idea
 
 # Citações geradas
-**/citations_*.xlsx
+citations*.xlsx
+~$citations*.xlsx
 
 # Compilações pelo PyInstaller
 **/build
